@@ -1,4 +1,4 @@
-let baseCharacter = {
+var baseCharacter = function() {
 	this.name;
 	this.strength = 0;
 	this.agility = 0;

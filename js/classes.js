@@ -5,6 +5,7 @@
 var asMovable = function() {
 	this.boundX = [];
 	this.boundY = [];
+	this.gravity = 1;
 
 	this.move = function() {
 		this.x += this.velX;
@@ -94,10 +95,11 @@ var Player = function(x, y, width, height, name,src) {
     this.name = name;
 	this.velX = 0;
 	this.velY = 0;
-	this.maxXSpeed = 8;
-	this.maxYSpeed = 12;
+	this.maxXSpeed = 4;
+	this.maxYSpeed = 4;
 	this.friction = .8;
-	this.acceleration = 3;
+	this.acceleration = 1;
+	this.jumping = false;
 	this.img = new Image();
 	this.img.src = src;
 	
@@ -105,6 +107,7 @@ var Player = function(x, y, width, height, name,src) {
 		this.checkKeys();
 		this.move();
 		this.bounds();		
+
 		Game.draw(this);
 		document.getElementById("position").innerHTML = "Position - " + this.position();
 		document.getElementById("projCooldown").innerHTML = "Projectile Cooldown - " + Game.projectileCooldown;
@@ -148,9 +151,10 @@ var Player = function(x, y, width, height, name,src) {
 			this.slowFriction(1,this.friction);
 		}
 		//check for space bar to shoot
-		if (Game.keys[32] && Game.projectileCooldown <= 0) {
-			Game.spawnProjectile();
-		}
+		//if (Game.keys[32] && !this.jumping) {
+		//	this.jumping = true;
+		//	this.accelerate(0,-75);
+		//}
 	}
 };
 

@@ -3,7 +3,7 @@
 Game = {
 	canvas : document.getElementById('myCanvas'),
 	ctx : document.getElementById("myCanvas").getContext("2d"),
-	player1 : new Player(1,1,150,100,"dude","images/jet.jpg"),
+	player : new Player(1,1,150,100,"dude","images/dude.png"),
 	projectiles : [],
 	maxProjectiles : 5,
 	projectileCooldown : 0,
@@ -13,52 +13,19 @@ Game = {
 	enemyTimer : 20,
 	score : 0,
 	keys : [],
+	level: new overworld(),
 	
 //				********************	Main Game Loop	**********************
 	gameLoop : function() {
-		
-		if (Game.enemyTimer <= 0) {
-			Game.spawnEnemy();
-		}
 
 		Game.ctx.clearRect(0, 0, Game.canvas.width, Game.canvas.height);
 		
 //				********************	Update items on canvas	**********************			
 
-		Game.player1.update();					
-		if (Game.projectiles.length > 0) {
-			for (var i=0; i < Game.projectiles.length; i++ ) {
-				Game.projectiles[i].update();
-			}
-		}
+		Game.level.update();
+		Game.player.update();	
 		
-		if (Game.projectiles.length > 0 && Game.enemies.length > 0) {
-			for (var i=0; i < Game.projectiles.length; i++ ) {
-				for (var n=0; n < Game.enemies.length; n++) {
-					if (Game.checkCollision(Game.projectiles[i],Game.enemies[n], i, n)) {	
-						Game.enemies[n].getDestroyed(n);
-					}
-				}
-			}
-		}
-		if (Game.enemies.length > 0) {
-			for (var i=0; i < Game.enemies.length; i++ ) {
-				Game.enemies[i].update();
-			}
-		}
 		
-//				********************	Set any cooldowns before restarting loop.	**********************					
-		if (Game.projectileCooldown > 0) {
-			Game.projectileCooldown --;
-		}
-		
-		//lazily put this in to check parameters
-		document.getElementById("item").innerHTML = " - enemies.length (" + Game.enemies.length + ") - projectiles.length( " + Game.projectiles.length + ")";
-		document.getElementById("timer").innerHTML = "Enemy Timer = " + Game.enemyTimer;
-		
-		if (Game.enemyTimer > 0) {
-			Game.enemyTimer--;
-		}
 		requestAnimationFrame(Game.gameLoop);
 	},
 	
@@ -93,7 +60,17 @@ Game = {
 	},
 	
 	draw : function (obj) {
+		console.log('obj', obj);
 		Game.ctx.drawImage(obj.img, obj.x, obj.y,obj.width,obj.height);
+	},
+	
+	drawLevel : function(level, xStart, yStart) {
+		for (var x = xStart; x < xStart + 10; x++) {
+			for (var y = yStart; y < yStart + 10; y++) {
+				console.log('level.scale', level.scale);
+				Game.ctx.drawImage(level.dimensions[x][y].img, x * level.scale, y * level.scale, level.scale, level.scale);
+			}
+		}
 	}
 	
 };
