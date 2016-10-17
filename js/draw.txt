@@ -1,0 +1,58 @@
+Draw = {
+	clickX = new Array(),
+	clickY = new Array(),
+	clickDrag = new Array(),
+	paint,
+	canvas : document.getElementById('myCanvas'),
+	ctx : document.getElementById("myCanvas").getContext("2d"),
+	
+	gameLoop : function() {
+
+		Draw.ctx.clearRect(0, 0, Draw.canvas.width, Draw.canvas.height);
+		
+//				********************	Update items on canvas	**********************			
+
+		Draw.update();
+		
+		
+		
+		requestAnimationFrame(Game.gameLoop);
+	},
+	
+	update : function() {
+		
+	},
+	function addClick(x, y, dragging) {
+		clickX.push(x);
+		clickY.push(y);
+		clickDrag.push(dragging);
+	}
+
+	function redraw(){
+		context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
+	
+		context.strokeStyle = "#df4b26";
+		context.lineJoin = "round";
+		context.lineWidth = 5;
+			
+		for(var i=0; i < clickX.length; i++) {		
+			context.beginPath();
+			if(clickDrag[i] && i){
+				context.moveTo(clickX[i-1], clickY[i-1]);
+			} else {
+				context.moveTo(clickX[i]-1, clickY[i]);
+			}
+			context.lineTo(clickX[i], clickY[i]);
+			context.closePath();
+			context.stroke();
+		}
+	}
+}
+
+function getMousePos(canvas, e) {
+	var rect = canvas.getBoundingClientRect();
+	return {
+        x: e.clientX - rect.left,
+		y: e.clientY - rect.top
+	};
+}

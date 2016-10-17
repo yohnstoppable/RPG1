@@ -70,16 +70,16 @@ var asMovable = function() {
 		
 		if (this.x < 0) {
 			returnArray[0] =  0;
-		} else if (this.x > Game.canvas.width - this.width) {
-			returnArray[0] = (Game.canvas.width - this.width);
+		} else if (this.x > ((Game.level.dimensions[0].length * Game.scale) - (Game.canvas.width/2))) {
+			returnArray[0] = ((Game.level.dimensions[0].length * Game.scale) - (Game.canvas.width/2));
 		} else {
 			returnArray[0] = -1;
 		}
 	
 		if (this.y < 0) {
 			returnArray[1] = 0;
-		} else if (this.y > Game.canvas.height - this.height) {
-			returnArray[1] = (Game.canvas.height - this.height);
+		} else if (this.y > ((Game.level.dimensions.length * Game.scale) - (Game.canvas.height/2))) {
+			returnArray[1] = ((Game.level.dimensions.length * Game.scale) - (Game.canvas.height/2));
 		} else {
 			returnArray[1] = -1;
 		}	
@@ -95,8 +95,8 @@ var Player = function(x, y, width, height, name,src) {
     this.name = name;
 	this.velX = 0;
 	this.velY = 0;
-	this.maxXSpeed = 4;
-	this.maxYSpeed = 4;
+	this.maxXSpeed = 6;
+	this.maxYSpeed = 6;
 	this.friction = .8;
 	this.acceleration = 1;
 	this.jumping = false;
@@ -110,8 +110,7 @@ var Player = function(x, y, width, height, name,src) {
 
 		Game.draw(this);
 		document.getElementById("position").innerHTML = "Position - " + this.position();
-		document.getElementById("projCooldown").innerHTML = "Projectile Cooldown - " + Game.projectileCooldown;
-		document.getElementById("enemyCooldown").innerHTML = "Enemy Cooldown - " + Game.enemyCooldown;
+		
 	}
 	
 	this.bounds = function () {
