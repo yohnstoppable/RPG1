@@ -4,17 +4,21 @@
 	
 	<body>
 	<div id="position">blah</div>
-	<div id="projCooldown">blah</div>
+	<div id="projCooldown">blah</div>------------------------------------
 	<div id="enemyCooldown">blah</div>
 	<div id="timer">blah</div>
 	<div id="item">blah</div>
 	<div id="score">blah</div>
-	<!---<canvas id="myCanvas" width="1000" height="500" style="border:1px solid #d3d3d3;"></canvas>--->
-	<canvas id="drawCanvas" width="490" height="220" style="border:1px solid #d3d3d3;"></canvas>
+	<canvas id="myCanvas" width="1000" height="500" style="border:1px solid #d3d3d3;"></canvas>
+	<canvas id="drawCanvas" width="500" height="500" style="border:1px solid #d3d3d3;"></canvas>
+		<script src="js/plugins/canvas2svg.js"></script>
 		<script src="js/plugins/soundjs-0.6.0.min.js"></script>
 		<script src="js/classes.js"></script>
 		<script src="js/levels/base.js"></script>
-		<!---<script src="js/game.js"></script>	--->
+		<script src="js/game.js"></script>
 		<script src="js/draw.js"></script>
+		
+		<button onClick="getGeneratedSVG()">Generate Dude</button>
+		<button onClick="drawReset()">Reset Dude</button>
 	</body>
 </html>

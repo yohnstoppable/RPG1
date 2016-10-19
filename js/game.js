@@ -4,8 +4,8 @@ Game = {
 	paint: false,
 	canvas : document.getElementById('myCanvas'),
 	ctx : document.getElementById("myCanvas").getContext("2d"),
-	scale: 30,
-	player : new Player(1,1,30,30,"dude","images/dude.png"),
+	scale: 60,
+	player : new Player(1,1,60,60,"dude","images/dude.png"),
 	projectiles : [],
 	maxProjectiles : 5,
 	projectileCooldown : 0,
@@ -36,7 +36,13 @@ Game = {
 //				******************** 	Code for spawning game objects	**********************
 	
 	draw : function (obj) {
-		Game.ctx.drawImage(obj.img, Game.canvas.width/2, Game.canvas.height/2,obj.width,obj.height);
+		if (obj.svg) {
+			console.log(Game.player.svg);
+			Game.ctx.drawSvg(obj.svg, Game.canvas.width*8.5, Game.canvas.height*8.5, obj.width, obj.height);
+		} else {
+			Game.ctx.drawImage(obj.img, Game.canvas.width/2, Game.canvas.height/2,obj.width,obj.height);
+		}
+		
 	},
 	
 	drawLevel : function(level) {
@@ -68,7 +74,7 @@ Game = {
 			Game.player.y = Game.player.y * Game.scale/(Game.scale+1) - ((Game.canvas.height)/((Game.scale+1)*2));
 		}
 		
-		if (Game.keys[107] && Game.scale < 50) {
+		if (Game.keys[107] && Game.scale < 60) {
 			Game.scale++;
 			Game.player.width++;
 			Game.player.height++;
@@ -81,8 +87,9 @@ Game = {
 	
 //			**********		Bindings		********
 window.onload = function() {
+	Game.canvas.allowTaint = true;
 	Game.gameLoop();
-	//Draw.gameLoop()
+	Draw.gameLoop();
 }
 
 window.addEventListener('keydown', function(event) {
