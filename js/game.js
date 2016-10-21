@@ -52,10 +52,6 @@ Game = {
 		yStart = Math.max(yStart-2, 0);
 		var offsetX = Game.player.x % Game.scale;
 		var offsetY = Game.player.y % Game.scale;
-		document.getElementById("projCooldown").innerHTML = "X Start - " + xStart;
-		document.getElementById("enemyCooldown").innerHTML = "Y Start - " + yStart;
-		document.getElementById('item').innerHTML = 'Offset X - ' + offsetX;
-		document.getElementById('score').innerHTML = 'Offset Y - ' + offsetY;
 		var tempX = [];
 		var tempY = [];
 		for (var x=xStart; x <= xStart + (Math.ceil(Game.canvas.width/Game.scale)+4); x++) {
@@ -66,6 +62,17 @@ Game = {
 	},
 	
 	checkSettingsKeys() {
+		if (Game.keys[73]) {
+			document.getElementById('drawCanvas').style.display = "inline";
+			Draw.gameLoop();
+			Draw.go = true;
+		}
+		
+		if (Game.keys[74]) {
+			drawReset();
+			document.getElementById('drawCanvas').style.display = "none";
+		}
+		
 		if (Game.keys[109] && Game.scale > 20) {
 			Game.scale--;
 			Game.player.width--;
@@ -89,7 +96,7 @@ Game = {
 window.onload = function() {
 	Game.canvas.allowTaint = true;
 	Game.gameLoop();
-	Draw.gameLoop();
+	//Draw.gameLoop();
 }
 
 window.addEventListener('keydown', function(event) {

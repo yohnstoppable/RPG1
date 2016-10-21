@@ -87,7 +87,7 @@ var asMovable = function() {
 	}
 }; 
 
-var Player = function(x, y, width, height, name,src) {
+var Player = function(x, y, width, height, name, src) {
     this.x = x;
     this.y = y;
 	this.width = width;
@@ -109,8 +109,6 @@ var Player = function(x, y, width, height, name,src) {
 		this.bounds();		
 
 		Game.draw(this);
-		document.getElementById("position").innerHTML = "Position - " + this.position();
-		
 	}
 	
 	this.bounds = function () {
@@ -220,7 +218,6 @@ var Enemy = function(width,height,src) {
 		Game.enemies.splice(item,1);
 		delete(this);
 		Game.score++;
-		document.getElementById("score").innerHTML = "Score - " + Game.score;
 	}
 }
 //Inherit the methods from the asMovable function, creating our mixins
