@@ -90,6 +90,8 @@ var asMovable = function() {
 var Player = function(x, y, width, height, name, src) {
     this.x = x;
     this.y = y;
+	this.realX = x;
+	this.realY = y;
 	this.width = width;
 	this.height = height;
     this.name = name;
@@ -108,7 +110,7 @@ var Player = function(x, y, width, height, name, src) {
 		this.move();
 		this.bounds();		
 
-		Game.draw(this);
+		Game.drawPlayer(this);
 	}
 	
 	this.bounds = function () {

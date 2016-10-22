@@ -13,8 +13,15 @@
 }
 
 #drawCanvas {
-	left: 250px;
+	left: 300px;
 	position: fixed;
 	top: 0;
 	z-index: 1;
+}
+
+#mapCanvas {
+	left: 200;
+	position: fixed;
+	top: 100;
+	z-index: 2;
 }

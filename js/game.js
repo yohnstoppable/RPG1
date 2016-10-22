@@ -4,8 +4,10 @@ Game = {
 	paint: false,
 	canvas : document.getElementById('myCanvas'),
 	ctx : document.getElementById("myCanvas").getContext("2d"),
-	scale: 60,
-	player : new Player(1,1,60,60,"dude","images/dude.png"),
+	scale: 90,
+	player : new Player(300,300,90,90,"dude","images/dude.png"),
+	xDifference: 0,
+	yDifference: 0,
 	projectiles : [],
 	maxProjectiles : 5,
 	projectileCooldown : 0,
@@ -16,6 +18,9 @@ Game = {
 	score : 0,
 	keys : [],
 	level: new overworld(1,1,30,30),
+	showMap : false,
+	mapCooldown: 15,
+	mapCooldownTimer: 0,
 	
 //				********************	Main Game Loop	**********************
 	gameLoop : function() {
@@ -24,44 +29,55 @@ Game = {
 		
 //				********************	Update items on canvas	**********************			
 
-		Game.checkSettingsKeys();
+		Game.checkKeys();
 		Game.level.update();
 		Game.player.update();
 		
+		if (Game.mapCooldownTimer < Game.mapCooldown) {
+			Game.mapCooldownTimer++;
+		}
 		
-		
+	
 		requestAnimationFrame(Game.gameLoop);
 	},
 	
 //				******************** 	Code for spawning game objects	**********************
 	
 	draw : function (obj) {
-		if (obj.svg) {
-			console.log(Game.player.svg);
-			Game.ctx.drawSvg(obj.svg, Game.canvas.width*8.5, Game.canvas.height*8.5, obj.width, obj.height);
-		} else {
-			Game.ctx.drawImage(obj.img, Game.canvas.width/2, Game.canvas.height/2,obj.width,obj.height);
-		}
+		Game.ctx.drawImage(obj.img, obj.x, obj.y, obj.width,obj.height);
+	},
+	
+	drawPlayer : function(player) {
+		var x = player.x;
+		var y = player.y;
+		x = Math.max(player.x - Game.xDifference, Game.scale*2);
+		x = Math.min (x, Game.canvas.width - Game.scale*3);
+		y = Math.max(player.y - Game.yDifference, Game.scale*2);
+		y = Math.min (y, Game.canvas.height - Game.scale*3);
 		
+		player.realX = x;
+		player.realY = y;
+		Game.xDifference = player.x - x;
+		Game.yDifference = player.y - y;
+		var obj = {
+			img: player.img,
+			x: player.realX,
+			y: player.realY,
+			width: Game.scale,
+			height: Game.scale,
+		}
+		Game.draw(obj);
 	},
 	
 	drawLevel : function(level) {
-		var xStart = Math.ceil(Game.player.x/Game.scale);
-		var yStart = Math.ceil(Game.player.y/Game.scale);
-		xStart = Math.max(xStart-2, 0);
-		yStart = Math.max(yStart-2, 0);
-		var offsetX = Game.player.x % Game.scale;
-		var offsetY = Game.player.y % Game.scale;
-		var tempX = [];
-		var tempY = [];
-		for (var x=xStart; x <= xStart + (Math.ceil(Game.canvas.width/Game.scale)+4); x++) {
-			for (var y = yStart; y <= yStart + (Math.ceil(Game.canvas.height/Game.scale)+4); y++) {
-				Game.ctx.drawImage(level.spaces[level.dimensions[y][x]].img, ((x-xStart) * Game.scale) - offsetX-40, ((y-yStart) * Game.scale) - offsetY-40, Game.scale, Game.scale);
+		for (x = 0; x < level.dimensions[0].length; x++) {
+			for (var y=0; y < level.dimensions.length; y++) {
+				Game.ctx.drawImage(level.spaces[level.dimensions[y][x]].img, (x * Game.scale)-Game.xDifference, (y * Game.scale)-Game.yDifference, Game.scale, Game.scale);
 			}
 		}
 	},
 	
-	checkSettingsKeys() {
+	checkKeys() {
 		if (Game.keys[73]) {
 			document.getElementById('drawCanvas').style.display = "inline";
 			Draw.gameLoop();
@@ -73,20 +89,30 @@ Game = {
 			document.getElementById('drawCanvas').style.display = "none";
 		}
 		
-		if (Game.keys[109] && Game.scale > 20) {
+		if (Game.keys[109] && Game.scale > 4) {
 			Game.scale--;
 			Game.player.width--;
 			Game.player.height--;
-			Game.player.x = Game.player.x * Game.scale/(Game.scale+1) - ((Game.canvas.width)/((Game.scale+1)*2));
-			Game.player.y = Game.player.y * Game.scale/(Game.scale+1) - ((Game.canvas.height)/((Game.scale+1)*2));
 		}
 		
 		if (Game.keys[107] && Game.scale < 60) {
 			Game.scale++;
 			Game.player.width++;
 			Game.player.height++;
-			Game.player.x = Game.player.x * Game.scale/(Game.scale-1) + ((Game.canvas.width)/((Game.scale-1)*2));
-			Game.player.y = Game.player.y * Game.scale/(Game.scale-1) + ((Game.canvas.height)/((Game.scale-1)*2));
+		}
+		
+		if (Game.keys[77] && Game.mapCooldownTimer >= Game.mapCooldown) {
+			Game.showMap = !Game.showMap;
+			
+			if (Game.showMap) {
+				document.getElementById('mapCanvas').style.display = 'inline';
+				Map.update(Game.level);
+			} else {
+				document.getElementById('mapCanvas').style.display = 'none';
+			}
+			
+			Game.mapCooldownTimer = 0;
+			
 		}
 	}
 	
