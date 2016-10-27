@@ -13,29 +13,36 @@ Draw = {
 	colorList : ['#ff0000', '#ffa500', '#ffff00','#008000','#4169e1','#ff00ff','#fff','#000','#808080','#935100'],
 	canvas : document.getElementById('drawCanvas'),
 	ctx : document.getElementById("drawCanvas").getContext("2d"),
+	keyCooldown: 15,
+	keyCooldownTimer: 0,
 	
 	gameLoop : function() {
-		if (Draw.go) {
-			Draw.ctx.clearRect(0, 0, Draw.canvas.width, Draw.canvas.height);
-			Draw.ctx.fillStyle = "#fff";
-			Draw.ctx.fillRect(0, 0, Draw.canvas.width, Draw.canvas.height);
-			createHead(Draw.ctx, '#989898', createBody, createColorList);
-			//createBody(Draw.ctx);
-			//createColorList(Draw.ctx);
-		
+		Draw.ctx.clearRect(0, 0, Draw.canvas.width, Draw.canvas.height);
+		Draw.ctx.fillStyle = "#fff";
+		Draw.ctx.fillRect(0, 0, Draw.canvas.width, Draw.canvas.height);
+		createHead(Draw.ctx, '#989898', createColorList);
+		//createBody(Draw.ctx);
+		//createColorList(Draw.ctx);
+	
 //				********************	Update items on canvas	**********************			
 
-			keyCheck();
-			//createMouse(Draw.ctx);
-			update(Draw.ctx);
-			increment();
+		keyCheck();
+		//createMouse(Draw.ctx);
+		update(Draw.ctx);
+		increment();
 		
-			requestAnimationFrame(Draw.gameLoop);
-		}
+			//requestAnimationFrame(Draw.gameLoop);
 	},
 	draw : function (obj) {
 		Game.ctx.drawImage(obj.img, obj.x, obj.y, obj.width, obj.height);
 	},
+	keysOnCooldown() {
+		return (Game.keyCooldownTimer !== Game.keyCooldown);
+	},
+	
+	resetKeyCooldown() {
+		Game.keyCooldownTimer = 0;
+	}
 }
 
 function update(context) {
@@ -76,7 +83,7 @@ Draw.canvas.addEventListener('mousedown', touchHandler, false);
 Draw.canvas.addEventListener("touchend", touchHandler, false);
 Draw.canvas.addEventListener("mouseup", touchHandler, false);
 
-function touchHandler(e) {
+function touchHandler(e) {	
 	e.preventDefault();
 	if (Draw.mousePosition.y > Draw.canvas.height * 9/10) {
 		if (e.type === "touchStart" || e.type === 'mousedown') {
@@ -86,8 +93,12 @@ function touchHandler(e) {
 	if (e.type === "touchstart" || e.type === 'mousedown') {
 		Draw.paint = true;
 		addClick(Draw.mousePosition.x, Draw.mousePosition.y, false);
+		Draw.gameLoop();
 	} else if ((e.type === "touchmove"|| e.type === 'mousemove') && Draw.paint) {
 		addClick(Draw.mousePosition.x, Draw.mousePosition.y, true);
+		if (Draw.paint) {
+			Draw.gameLoop();
+		}
 	} else if (e.type === 'mouseup' || e.type === 'touchend') {
 		Draw.paint = false;
 	}
@@ -108,17 +119,20 @@ function getGeneratedSVG() {
 	tempCanvas.width = 500;
 	tempCanvas.height = 500;
 	var tempContext = tempCanvas.getContext("2d");
-	createHead(tempContext, '#000', createBody);
+	createHead(tempContext, '#000');
 	update(tempContext);
 	var img = new Image();
 	img.src = tempCanvas.toDataURL("image/png");
 	Game.player.img = img;
+	drawReset();
 }
 
 function drawReset() {
 	Draw.clickDrag = [];
 	Draw.clickX = [];
 	Draw.clickY = [];
+	Draw.paint = false;
+	Draw.clicks = [];
 }
 
 function createHead(context, color, callback1, callback2) {
@@ -127,7 +141,7 @@ function createHead(context, color, callback1, callback2) {
 	context.strokeStyle = "#000";
 	
 	context.beginPath();
-	context.arc(Draw.canvas.width/2,Draw.canvas.height/4 + 30,Draw.canvas.width/4,0,Math.PI*2,true); // Outer circle
+	context.arc(Draw.canvas.width/2,Draw.canvas.height * 9/20,Draw.canvas.width/4,0,Math.PI*2,true); // Outer circle
 	context.fill();
 	context.stroke();
 	if (callback1) {
@@ -186,18 +200,8 @@ function createMouse(context){
 }
 
 function keyCheck() {
-	if (Game.keys[17] && Game.keys[90] && Draw.undoCooldownTimer >= Draw.undoCooldown) {
-		var start = Draw.clicks[Draw.clicks.length-1];
-		Draw.clickY.splice(start);
-		Draw.clickX.splice(start);
-		Draw.clickColors.splice(start);
-		Draw.clickDrag.splice(start);
-		Draw.clicks.splice(Draw.clicks.length-1);
-		Draw.undoCooldownTimer = 0;
-		update(Draw.ctx);
-	} else if (Game.keys[32]) {
-		Draw.go = false;
-		getGeneratedSVG();
+	if (!Draw.keysOnCooldown()) {
+		
 	}
 }
 

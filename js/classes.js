@@ -87,7 +87,9 @@ var asMovable = function() {
 	}
 }; 
 
-var Player = function(x, y, width, height, name, src) {
+var Player = function(playerNumber, x, y, width, height, name, head, body, playerClass) {
+	console.log(playerClass);
+	console.log(playerClass.className);
     this.x = x;
     this.y = y;
 	this.realX = x;
@@ -97,20 +99,76 @@ var Player = function(x, y, width, height, name, src) {
     this.name = name;
 	this.velX = 0;
 	this.velY = 0;
-	this.maxXSpeed = 6;
-	this.maxYSpeed = 6;
+	this.maxXSpeed = 5;
+	this.maxYSpeed = 5;
 	this.friction = .8;
-	this.acceleration = 1;
-	this.jumping = false;
+	this.acceleration = .2;
+	this.jumping = false;	
 	this.img = new Image();
-	this.img.src = src;
+	this.img.src = head;
+	this.body = new Image();
+	this.body.src = body;
+	this.playerClass = playerClass;
+	this.strength = 10;
+	this.agility = 5;
+	this.intelligence = 11;
+	this.hitpoints = 10;
+	this.stamina = 15;
+	this.currentHitpoints = 10;
+	this.mana = 10;
+	this.currentMana = 10;
+	this.weapon = megaSword;
+	this.armor;
+	this.helmet;
+	this.accessory;
+	this.characterClass;
+	this.buffs = [];
+	this.counter = 0;
+	this.headOffset = 0;
+	this.bodyFrame = 1;
+	this.movementHistoryX = [];
+	this.movementHistoryY = [];
+	this.playerNumber = playerNumber;
 	
 	this.update = function() {
-		this.checkKeys();
-		this.move();
-		this.bounds();		
-
-		Game.drawPlayer(this);
+		if (this.playerNumber === 1) {
+			console.log('blah');			
+			this.checkKeys();
+			this.move();
+			this.bounds();
+		} else if (this.playerNumber == 2) {
+			if (Game.player.velX != 0) {
+				this.x = Game.player.realX - ((Math.abs(Game.player.velX)/Game.player.velX)*Game.scale/2);
+				if (Game.player.velY === 0) {
+					this.y = Game.player.realY;
+				}
+			}
+			if (Game.player.velY != 0) {
+				this.y = Game.player.realY - ((Math.abs(Game.player.velY)/Game.player.velY)*(Game.scale * 2/3));
+				if (Game.player.velX === 0) {
+					this.x = Game.player.realX
+				}
+			}
+		}			
+			
+		if (Game.player.velX != 0 || Game.player.velY != 0) {
+			this.counter += Math.max(Math.abs(Game.player.velX), Math.abs(Game.player.velY))/4;
+			if (this.counter <= 15) {
+				this.headOffset = Game.scale/20;
+				this.bodyFrame = 2;
+			} else {
+				this.headOffset = -Game.scale/20;
+				this.bodyFrame = 3;
+			}
+			
+			if (this.counter >= 30) {
+				this.counter = 0;
+			}
+		} else {
+			this.counter = 0;
+			this.headOffset = 0;
+			this.bodyFrame = 1;
+		}
 	}
 	
 	this.bounds = function () {
@@ -156,6 +214,56 @@ var Player = function(x, y, width, height, name, src) {
 		//}
 	}
 };
+
+Player.prototype.getArmorClass = function() {
+	return this.getStat("agility") + this.armor.getAC();
+}
+
+Player.prototype.getStat = function(stat) {
+	console.log(stat);
+	console.log(this.getBuffStat(stat));
+	console.log(this.getGearStat(stat));
+	console.log(this[stat]);
+	return this.getBuffStat(stat) + this.getGearStat(stat) + this[stat];
+}
+
+Player.prototype.getGearStat = function(stat) {
+	let gearStat = 0;
+	
+	if (this.helmet) {
+		gearStat += this.helmet[stat];
+	}
+	
+	if (this.armor) {
+		gearStat += this.armor[stat];
+	}
+	
+	if (this.accessory) {
+		gearStat += this.accessory[stat];
+	}
+	
+	if (this.weapon) {
+		gearStat += this.weapon[stat];
+	}
+	
+	return gearStat;
+}
+
+Player.prototype.getBuffStat = function(stat) {
+	if (this.buffs.length > 0) {
+		return this.buffs.reduce(function(previousValue, currentValue, currentIndex, array) {
+			return previousValue[stat] + currentValue[stat];
+		});
+	}
+	
+	return 0;
+}
+
+Player.prototype.draw = function(x, y, width, height, context) {
+	context.drawImage(this.body,((this.bodyFrame-1) * (this.body.width/3)), 0, this.body.width/3, this.body.height, x + width * 2/9, y + (height * 2/3), width/3, height/3);
+	context.drawImage(this.img, 0, 0, this.img.width, this.img.height, x, (y + height/7) - this.headOffset, width * 2/3, height * 2/3);
+	context.drawImage(this.weapon.img, x + width/(Game.scale/15) + (this.bodyFrame*(Game.scale/30)), y + height/(Game.scale/5) + this.headOffset/2 + (this.bodyFrame*(Game.scale/12)), width/6, height * 2/3);
+}
 
 var Projectile = function(obj,width,height,src,velX,velY) {
 	this.x = obj.x + obj.width;

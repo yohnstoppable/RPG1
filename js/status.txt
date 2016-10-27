@@ -1,0 +1,11 @@
+Status = {
+	canvas : document.getElementById('statusCanvas'),
+	ctx : document.getElementById("statusCanvas").getContext("2d"),
+	
+	drawPlayer(player) {
+		var scaleX = Map.canvas.width/level.width;
+		var scaleY = Map.canvas.height/level.height;
+		var scale = Math.min(scaleX, scaleY)
+		Game.ctx.drawImage(player.img, 100, 100, obj.y, obj.width, obj.height);
+	}
+}
