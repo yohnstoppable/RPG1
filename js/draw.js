@@ -123,7 +123,7 @@ function getGeneratedSVG() {
 	update(tempContext);
 	var img = new Image();
 	img.src = tempCanvas.toDataURL("image/png");
-	Game.player.img = img;
+	Game.player.head.img = img;
 	drawReset();
 }
 

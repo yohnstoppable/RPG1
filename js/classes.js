@@ -87,9 +87,158 @@ var asMovable = function() {
 	}
 }; 
 
+var AnimatedObject = function(img, imgWidth, x, y, width, height, totalFrames, movementFrames) {
+	this.img = new Image();
+	this.img.src = img;
+	var that = this;
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+	this.totalFrames = 1;
+	this.currentFrame = 1;
+	this.animationSwitchTime = 0;
+	this.time = 0;
+	this.totaltime = 0;
+	this.finished = true;
+	this.stopped = true;
+	this.animationType;
+	this.startingWidth = 0;
+	this.endingWidth = 0;
+	this.animationsRun = 0;
+	this.totalFrames = totalFrames;
+	this.movementFrames = movementFrames;
+	if (movementFrames) {
+		this.type = "movement";
+	} else {
+		this.type = "sprite";
+	}
+	this.frameSize = imgWidth / totalFrames;
+}
+
+AnimatedObject.prototype.startAnimation = function(startingFrame, animationType, framesAnimated, totalFrames, animationSwitchTime, totalAnimations, xOffsets, yOffsets) {
+	this.stopped = false;
+	this.finished = false;
+	this.animationType = animationType;
+	this.framesAnimated = framesAnimated;
+	this.animationSwitchTime = animationSwitchTime;
+	this.frameSize = this.img.width / this.totalFrames;
+	this.startingFrame = startingFrame;
+	this.currentFrame = startingFrame;
+	this.stopped = false;
+	this.xOffsets = [];
+	this.yOffsets = [];
+	this.totalAnimations = 0;
+	
+	if (this.animationType === "movement") {
+		this.xOffsets = xOffsets;
+		this.yOffsets = yOffsets;
+	}
+	if (totalAnimations) {
+		this.totalAnimations = this.totalAnimations;
+	}
+}
+
+AnimatedObject.prototype.stopAnimation = function() {
+	this.stopped = true;
+	this.finished = true;
+	this.framesAnimated = 0;
+	this.currentFrame = 1;
+	this.animationSwitchTime = 0;
+	this.time = 0;
+	this.totaltime = 0;
+	this.finished = true;
+	this.stopped = true;
+	this.animationType;
+	this.startingWidth = 0;
+	this.endingWidth = 0;
+	this.animationsRun = 0;
+}
+
+AnimatedObject.prototype.updateAnimation = function(x,y) {
+	if (x) {
+		this.x = x;
+	}
+	if (y) {
+		this.y = y ;
+	}
+	this.time++;
+	this.totalTime++;
+	var stop = false;
+	
+	if (this.totalAnimations && this.totalAnimations !== 0 && this.totalTime >= (animationSwitchTime * finishAfter) ) {
+		stop = true;
+	}
+	if (stop || this.stop) {
+		if (this.finishCallback) {
+			this.finishCallback();
+		}
+		this.stopped = true;
+	}
+	
+	if (this.animationType === "sprite") {
+		var startingWidth = (this.currentFrame-1) * this.frameSize;
+		var endingWidth = startingWidth + this.frameSize;
+	}			
+	
+	if (this.time >= this.animationSwitchTime) {
+		this.time = 1;
+		this.currentFrame++;
+
+		if (this.currentFrame >= (this.framesAnimated + this.startingFrame)) {
+			this.currentFrame = this.startingFrame;
+		}
+	}
+}
+
+AnimatedObject.prototype.isAnimating = function() {
+	return (!this.stopped && !this.finished);
+}
+
+AnimatedObject.prototype.stopAnimating = function() {
+	this.stopped = true;
+	this.finished = true;
+}
+
+AnimatedObject.prototype.getCurrentImage = function() {
+	//console.log("getCurrentImage");
+	var offsetX = 0;
+	var offsetY = 0;
+	
+	if (!this.stopped && this.animationType === "movement") {
+		offsetX = this.xOffsets[this.currentFrame-2];
+		offsetY = this.yOffsets[this.currentFrame-2];
+	}
+	
+	if (this.type === "sprite") {
+		return {
+			img: this.img,
+			sX: this.frameSize * (this.currentFrame-1),
+			sY: 0,
+			sWidth: this.frameSize,
+			sHeight: this.img.height,
+			x: this.x,
+			y: this.y,
+			width: this.width,
+			height: this.height
+		};
+	} else {
+		console.log(this.currentFrame);
+		return {
+			img: this.img,
+			sX: 0,
+			sY: 0,
+			sWidth: this.img.width,
+			sHeight: this.img.height,
+			x: this.x + offsetX,
+			y: this.y + offsetY,
+			width: this.width,
+			height: this.height
+		};
+	}
+}
+
 var Player = function(playerNumber, x, y, width, height, name, head, body, playerClass) {
-	console.log(playerClass);
-	console.log(playerClass.className);
     this.x = x;
     this.y = y;
 	this.realX = x;
@@ -104,10 +253,6 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 	this.friction = .8;
 	this.acceleration = .2;
 	this.jumping = false;	
-	this.img = new Image();
-	this.img.src = head;
-	this.body = new Image();
-	this.body.src = body;
 	this.playerClass = playerClass;
 	this.strength = 10;
 	this.agility = 5;
@@ -129,10 +274,18 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 	this.movementHistoryX = [];
 	this.movementHistoryY = [];
 	this.playerNumber = playerNumber;
+	this.updateDiagnostics = 100;
+	this.updateDiag = 0;
+	this.head = new AnimatedObject(head, 450, x, y + (this.height * 1/6), width * 2/3, height * 2/3, 1, 2);
+	this.body = new AnimatedObject(body, 500, x + (this.width * 2/9), y + (this.height * 2/3), width * 1/3, height * 1/3, 3);
+	
+	
+	/*context.drawImage(this.body,((this.bodyFrame-1) * (this.body.width/3)), 0, this.body.width/3, this.body.height, x + width * 2/9, y + (height * 2/3), width/3, height/3);
+	context.drawImage(this.img, 0, 0, this.img.width, this.img.height, x, (y + height/7) - this.headOffset, width * 2/3, height * 2/3);
+	context.drawImage(this.weapon.img, x + width/(Game.scale/15) + (this.bodyFrame*(Game.scale/30)), y + height/(Game.scale/5) + this.headOffset/2 + (this.bodyFrame*(Game.scale/12)), width/6, height * 2/3);*/
 	
 	this.update = function() {
-		if (this.playerNumber === 1) {
-			console.log('blah');			
+		if (this.playerNumber === 1) {			
 			this.checkKeys();
 			this.move();
 			this.bounds();
@@ -152,6 +305,22 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 		}			
 			
 		if (Game.player.velX != 0 || Game.player.velY != 0) {
+			if (!this.body.isAnimating()) {
+				this.body.startAnimation(2, "sprite", 2, 3, 15);
+			} else if (this.playerNumber === 1) {
+				this.body.updateAnimation(this.realX + (this.width * 2/9), this.realY + (this.height * 2/3));
+			} else {
+				this.body.updateAnimation(this.x + (this.width * 2/9), this.y + (this.height * 2/3));
+			}
+			
+			if (!this.head.isAnimating()) {
+				this.head.startAnimation(2, "movement", 2, 3, 15, 0, [0,0], [-6,6]);
+			} else if (this.playerNumber === 1) {
+				this.head.updateAnimation(this.realX, this.realY + (this.height * 1/6));
+			} else {
+				this.head.updateAnimation(this.x, this.y + (this.height * 1/6));
+			}
+			//this.headAnimation = new animation(this.head)
 			this.counter += Math.max(Math.abs(Game.player.velX), Math.abs(Game.player.velY))/4;
 			if (this.counter <= 15) {
 				this.headOffset = Game.scale/20;
@@ -165,10 +334,20 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 				this.counter = 0;
 			}
 		} else {
+			if (this.body.isAnimating()) {
+				this.body.stopAnimating();
+			} else {
+				console.log(this.head.getCurrentImage());
+			}
+			
+			if (this.head.isAnimating()) {
+				this.head.stopAnimating();
+			}
 			this.counter = 0;
 			this.headOffset = 0;
 			this.bodyFrame = 1;
 		}
+		/*context.drawImage(this.body,((this.bodyFrame-1) * (this.body.width/3)), 0, this.body.width/3, this.body.height, x + width * 2/9, y + (height * 2/3), width/3, height/3);*/
 	}
 	
 	this.bounds = function () {
@@ -220,10 +399,6 @@ Player.prototype.getArmorClass = function() {
 }
 
 Player.prototype.getStat = function(stat) {
-	console.log(stat);
-	console.log(this.getBuffStat(stat));
-	console.log(this.getGearStat(stat));
-	console.log(this[stat]);
 	return this.getBuffStat(stat) + this.getGearStat(stat) + this[stat];
 }
 
@@ -259,10 +434,20 @@ Player.prototype.getBuffStat = function(stat) {
 	return 0;
 }
 
-Player.prototype.draw = function(x, y, width, height, context) {
-	context.drawImage(this.body,((this.bodyFrame-1) * (this.body.width/3)), 0, this.body.width/3, this.body.height, x + width * 2/9, y + (height * 2/3), width/3, height/3);
-	context.drawImage(this.img, 0, 0, this.img.width, this.img.height, x, (y + height/7) - this.headOffset, width * 2/3, height * 2/3);
-	context.drawImage(this.weapon.img, x + width/(Game.scale/15) + (this.bodyFrame*(Game.scale/30)), y + height/(Game.scale/5) + this.headOffset/2 + (this.bodyFrame*(Game.scale/12)), width/6, height * 2/3);
+Player.prototype.draw = function(context) {
+	var x = this.x;
+	var y = this.y;
+	if (this.playerNumber === 1) {
+		x = this.realX;
+		y = this.realY;
+	}
+	var bodyInfo = this.body.getCurrentImage();
+	var headInfo = this.head.getCurrentImage();
+	//console.log(this.body.currentFrame);
+	//context.drawImage(this.body.img,((this.bodyFrame-1) * (this.body.img.width/3)), 0, this.body.img.width/3, this.body.img.height, x + width * 2/9, y + (height * 2/3), this.body.width, this.body.height);
+	context.drawImage(bodyInfo.img, bodyInfo.sX, bodyInfo.sY, bodyInfo.sWidth, bodyInfo.sHeight, bodyInfo.x, bodyInfo.y, bodyInfo.width, bodyInfo.height);
+	context.drawImage(headInfo.img, headInfo.sX, headInfo.sY, headInfo.sWidth, headInfo.sHeight, headInfo.x, headInfo.y, headInfo.width, headInfo.height);
+	context.drawImage(this.weapon.img, x + this.width/(Game.scale/15) + (this.bodyFrame*(Game.scale/30)), y + this.height/(Game.scale/5) + this.headOffset/2 + (this.bodyFrame*(Game.scale/12)), this.width/6, this.height * 2/3);
 }
 
 var Projectile = function(obj,width,height,src,velX,velY) {
@@ -334,3 +519,5 @@ var Enemy = function(width,height,src) {
 asMovable.call(Player.prototype);
 asMovable.call(Projectile.prototype);
 asMovable.call(Enemy.prototype);
+asMovable.call(Player.head.prototype);
+asMovable.call(Player.body.prototype);
