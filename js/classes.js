@@ -261,7 +261,7 @@ Player.prototype.getBuffStat = function(stat) {
 
 Player.prototype.draw = function(x, y, width, height, context) {
 	context.drawImage(this.body,((this.bodyFrame-1) * (this.body.width/3)), 0, this.body.width/3, this.body.height, x + width * 2/9, y + (height * 2/3), width/3, height/3);
-	context.drawImage(this.img, 0, 0, this.img.width, this.img.height, x, (y + height/7) - this.headOffset, width * 2/3, height * 2/3);
+	context.drawImage(this.img, 0, 0, this.img.width, this.img.height, x - this.headOffset, (y + height/7), width * 2/3, height * 2/3);
 	context.drawImage(this.weapon.img, x + width/(Game.scale/15) + (this.bodyFrame*(Game.scale/30)), y + height/(Game.scale/5) + this.headOffset/2 + (this.bodyFrame*(Game.scale/12)), width/6, height * 2/3);
 }
 
