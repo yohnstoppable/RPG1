@@ -40,13 +40,16 @@ Game = {
 		//Game.level.update();
 		Game.player.update();
 		Game.player2.update();
+		
+		Game.updateRealLocation(Game.player2);
+		Game.updateRealLocation(Game.player);
 	
 		//requestAnimationFrame(Game.gameLoop);
 	},
 	gameDraw: function() {
 		Game.drawLevel(Game.level);
-		Game.drawPlayer(Game.player2);
-		Game.drawPlayer(Game.player);		
+		Game.player2.draw(Game.ctx);
+		Game.player.draw(Game.ctx);
 	},
 	
 //				******************** 	Code for spawning game objects	**********************
@@ -55,7 +58,7 @@ Game = {
 		Game.ctx.drawImage(obj.img, obj.x, obj.y, obj.width/2,obj.height/2, obj.width/2, obj.height/2);
 	},
 	
-	drawPlayer : function(player) {
+	updateRealLocation : function(player) {
 		if (player.playerNumber === 1) {
 			var x = player.x;
 			var y = player.y;
@@ -67,20 +70,8 @@ Game = {
 			player.realX = x;
 			player.realY = y;
 			Game.xDifference = player.x - x;
-			Game.yDifference = player.y - y;
-			var obj = {
-				img: player.img,
-				x: player.realX,
-				y: player.realY,
-				width: Game.scale,
-				height: Game.scale,
-			}
-			player.draw(player.realX, player.realY, Game.scale, Game.scale, Game.ctx);
-		} else {
-			player.draw(player.x, player.y, Game.scale, Game.scale, Game.ctx);
-		}
-		
-		
+			Game.yDifference = player.y - y;	
+		}			
 	},
 	
 	drawLevel : function(level) {
