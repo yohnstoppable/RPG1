@@ -85,6 +85,18 @@ var asMovable = function() {
 		}	
 		return returnArray;
 	}
+	
+	this.updateRealLocation = function() {
+		var x = this.x;
+		var y = this.y;
+		x = Math.max(this.x - Game.xDifference, Game.scale*2);
+		x = Math.min (x, Game.canvas.width - Game.scale*3);
+		y = Math.max(this.y - Game.yDifference, Game.scale);
+		y = Math.min (y, Game.canvas.height - Game.scale*2);
+			
+		this.realX = x;
+		this.realY = y;				
+	}
 }; 
 
 var AnimatedObject = function(img, imgWidth, x, y, width, height, totalFrames, movementFrames) {
@@ -201,7 +213,6 @@ AnimatedObject.prototype.stopAnimating = function() {
 }
 
 AnimatedObject.prototype.getCurrentImage = function() {
-	//console.log("getCurrentImage");
 	var offsetX = 0;
 	var offsetY = 0;
 	
@@ -223,7 +234,6 @@ AnimatedObject.prototype.getCurrentImage = function() {
 			height: this.height
 		};
 	} else {
-		console.log(this.currentFrame);
 		return {
 			img: this.img,
 			sX: 0,
@@ -336,9 +346,7 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 		} else {
 			if (this.body.isAnimating()) {
 				this.body.stopAnimating();
-			} else {
-				console.log(this.head.getCurrentImage());
-			}
+			} 
 			
 			if (this.head.isAnimating()) {
 				this.head.stopAnimating();
@@ -347,6 +355,16 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 			this.headOffset = 0;
 			this.bodyFrame = 1;
 		}
+		
+		if (this.playerNumber === 1) {
+			this.updateRealLocation();
+			Game.xDifference = this.x - this.realX;
+			Game.yDifference = this.y - this.realY;
+		}
+		
+		if (this.weapon.currentCooldown > 0) {
+			this.weapon.currentCooldown--;
+		};
 		/*context.drawImage(this.body,((this.bodyFrame-1) * (this.body.width/3)), 0, this.body.width/3, this.body.height, x + width * 2/9, y + (height * 2/3), width/3, height/3);*/
 	}
 	
@@ -387,10 +405,10 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 			this.slowFriction(1,this.friction);
 		}
 		//check for space bar to shoot
-		//if (Game.keys[32] && !this.jumping) {
-		//	this.jumping = true;
-		//	this.accelerate(0,-75);
-		//}
+		if (Game.keys[32]) {
+			console.log('weapon', this.weapon);
+			this.weapon.throw(this,Game.mousePosition,true);
+		}
 	}
 };
 
@@ -443,35 +461,79 @@ Player.prototype.draw = function(context) {
 	}
 	var bodyInfo = this.body.getCurrentImage();
 	var headInfo = this.head.getCurrentImage();
-	//console.log(this.body.currentFrame);
-	//context.drawImage(this.body.img,((this.bodyFrame-1) * (this.body.img.width/3)), 0, this.body.img.width/3, this.body.img.height, x + width * 2/9, y + (height * 2/3), this.body.width, this.body.height);
 	context.drawImage(bodyInfo.img, bodyInfo.sX, bodyInfo.sY, bodyInfo.sWidth, bodyInfo.sHeight, bodyInfo.x, bodyInfo.y, bodyInfo.width, bodyInfo.height);
 	context.drawImage(headInfo.img, headInfo.sX, headInfo.sY, headInfo.sWidth, headInfo.sHeight, headInfo.x, headInfo.y, headInfo.width, headInfo.height);
 	context.drawImage(this.weapon.img, x + this.width/(Game.scale/15) + (this.bodyFrame*(Game.scale/30)), y + this.height/(Game.scale/5) + this.headOffset/2 + (this.bodyFrame*(Game.scale/12)), this.width/6, this.height * 2/3);
 }
 
-var Projectile = function(obj,width,height,src,velX,velY) {
-	this.x = obj.x + obj.width;
+var Projectile = function(obj,weapon) {
+	console.log('weapon', weapon);
+	this.weapon = weapon;
+	this.x = obj.x + obj.width/2;
 	this.y = obj.y + obj.height / 2;
-	this.width = width;
-	this.height = height;
-	this.img = new Image();
-	this.img.src = src;
-	this.velX = velX;
-	this.velY = velY;
+	this.width = weapon.width;
+	this.height = weapon.height;
+	this.img = weapon.img;
+	this.velX = weapon.speed.x;
+	this.velY = weapon.speed.y;
 	this.maxXSpeed = -1;
 	this.maxYSpeed = 1;
+	this.health = 2;
+	//this.audio = weapon.spawnSound;
+	//createjs.Sound.play(this.audio,createjs.Sound.INTERRUPT_ANY);
 	
-	this.update = function() {
-		if (this.x > Game.canvas.width) {
-			Game.projectiles.shift();
-			delete(this);
+	this.update = function(gameArray,index) {
+		if (Math.abs(this.health) > 10) {
+			document.getElementById("projectile").innerHTML = this.health;
+		}
+		if (this.bounds(gameArray,index)) {
+			this.kill(gameArray,index);
+			return;
 		} else {
 			this.move();
-			Game.draw(this);
+		}
+	}
+	
+	this.bounds = function(gameArray,index) {
+		var check = this.checkBounds(this.width,this.height);
+		if (check[0] != -1 || check[1] != -1) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 };
+
+Projectile.prototype.draw = function(context) {
+	var x = this.x;
+	var y = this.y;
+	
+	if (Game.xDifference != 0) {
+		x = Math.max(this.x - Game.xDifference, Game.scale*2);
+		x = Math.min (x, Game.canvas.width - Game.scale*3);
+	}
+	
+	if (Game.yDifference != 0) {
+		y = Math.max(this.y - Game.yDifference, Game.scale);
+		y = Math.min (y, Game.canvas.height - Game.scale*2);
+	}			
+
+	console.log('draw projectile', x + ', ' + y);
+	context.drawImage(this.weapon.img, x, y, this.width, this.height);
+}
+
+Projectile.prototype.kill = function(array, index) {
+		if (typeof this.deathSound !== 'undefined') {
+			createjs.Sound.play(this.deathSound,createjs.Sound.INTERRUPT_ANY);
+		}
+		
+		if (this.drop) {
+			Stage.spawnSpecial(this.x, this.y);
+		}
+		array.splice(index,1);
+		delete(this);
+		Game.score += this.points;
+	}
 
 var Enemy = function(width,height,src) {
 	this.width = width;
@@ -519,5 +581,3 @@ var Enemy = function(width,height,src) {
 asMovable.call(Player.prototype);
 asMovable.call(Projectile.prototype);
 asMovable.call(Enemy.prototype);
-asMovable.call(Player.head.prototype);
-asMovable.call(Player.body.prototype);

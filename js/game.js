@@ -11,6 +11,7 @@ Game = {
 	xDifference: 0,
 	yDifference: 0,
 	projectiles : [],
+	badProjectiles : [],
 	maxProjectiles : 5,
 	projectileCooldown : 0,
 	enemies: [],
@@ -26,6 +27,7 @@ Game = {
 	keyCooldownTimer: 0,
 	lastFrameTimeMs: 0,
     maxFPS: 60,
+	mousePosition : {x:0,y:0},
 	
 //				********************	Main Game Loop	**********************
 	gameLoop : function() {
@@ -41,8 +43,11 @@ Game = {
 		Game.player.update();
 		Game.player2.update();
 		
-		Game.updateRealLocation(Game.player2);
-		Game.updateRealLocation(Game.player);
+		if (Game.projectiles.length > 0) {
+			for (var i=0; i < Game.projectiles.length; i++ ) {
+				Game.projectiles[i].update(Game.projectiles, i);
+			}
+		}
 	
 		//requestAnimationFrame(Game.gameLoop);
 	},
@@ -50,28 +55,17 @@ Game = {
 		Game.drawLevel(Game.level);
 		Game.player2.draw(Game.ctx);
 		Game.player.draw(Game.ctx);
+		if (Game.projectiles && Game.projectiles.length > 0) {
+			for (var i=0; i < Game.projectiles.length; i++) {
+				Game.projectiles[i].draw(Game.ctx);
+			}
+		}
 	},
 	
 //				******************** 	Code for spawning game objects	**********************
 	
 	draw : function (obj) {
 		Game.ctx.drawImage(obj.img, obj.x, obj.y, obj.width/2,obj.height/2, obj.width/2, obj.height/2);
-	},
-	
-	updateRealLocation : function(player) {
-		if (player.playerNumber === 1) {
-			var x = player.x;
-			var y = player.y;
-			x = Math.max(player.x - Game.xDifference, Game.scale*2);
-			x = Math.min (x, Game.canvas.width - Game.scale*3);
-			y = Math.max(player.y - Game.yDifference, Game.scale);
-			y = Math.min (y, Game.canvas.height - Game.scale*2);
-			
-			player.realX = x;
-			player.realY = y;
-			Game.xDifference = player.x - x;
-			Game.yDifference = player.y - y;	
-		}			
 	},
 	
 	drawLevel : function(level) {
@@ -159,6 +153,14 @@ Game = {
 function end() {
 	
 }
+
+function getMousePos(canvas, e) {
+	var rect = canvas.getBoundingClientRect();
+	return {
+        x: e.clientX - rect.left,
+		y: e.clientY - rect.top
+	};
+}
 	
 //			**********		Bindings		********
 window.onload = function() {
@@ -178,4 +180,8 @@ window.addEventListener('keyup', function(event) {
 	Game.keys[event.keyCode] = false;
 	event.preventDefault();
 });
+
+Game.canvas.addEventListener('mousemove', function(e) {
+	Game.mousePosition = getMousePos(Game.canvas, e);
+}, false);
 
