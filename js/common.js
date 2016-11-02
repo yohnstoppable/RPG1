@@ -2,30 +2,38 @@
 
 Common = {
 	//calculates the speed of x and y according to the speed and how far to the side and up/down a target is
-	getRiseRun : function(obj,target,speed) {
-		var projectileSpeed = speed;
+	getRiseRun : function(obj,target,weapon) {
+		var projectileSpeed = weapon.bulletSpeed;
 		var offsetX = 0;
 		var offsetX2 = 0;
 		var offsetY = 0;
 		var offsetY2 = 0;
 		if (typeof(target.width) != "undefined") {
-			var offsetX = target.width;
+			offsetX += target.width;
 		}
+    
+          if (typeof(weapon.width) != "undefined") {
+                offsetX -= weapon.width;
+          }
 		
 		if (typeof(obj.width) != "undefined") {
-			var offsetX2 = obj.width;
+			offsetX2 += obj.width;
 		}
+    
+        if (typeof(weapon.height) != "undefined") {
+                offsetY -= weapon.height;
+          }
 		
 		if (typeof(target.height) != "undefined") {
-			var offsetY = target.height;
+			  offsetY += target.height;
 		}
 		
 		if (typeof(obj.height) != "undefined") {
-			var offsetY2 = obj.height;
+			offsetY2 += obj.height;
 		}
 		
-		var rise = target.y - obj.y + (offsetY/2) - (offsetY2/2);
-		var run = target.x - obj.x + (offsetX/2) - (offsetY2/2);
+		var rise = target.y - obj.y + (offsetY/2) - (offsetY2/4);
+		var run = target.x - obj.x + (offsetX/2) - (offsetY2/4);
 		
 		var hyp = Math.sqrt(Math.pow(run,2) + Math.pow(rise,2));
 		
@@ -68,23 +76,23 @@ Common = {
 		}
 	},
 	
-	drawRotated : function(obj) {
+	drawRotated : function(img, x, y, width, height, ctx, angle) {
 		// save the context's co-ordinate system
-		Game.ctx.save(); 
+		ctx.save(); 
  
 		// move the origin to object   
-		Game.ctx.translate(obj.x, obj.y); 
+		ctx.translate(x, y); 
  
 		// now move across and down half the width and height of the object
-		Game.ctx.translate(obj.width/2, obj.height/2); 
+		ctx.translate(width/2, height/2); 
  
 		// rotate around this point
-		Game.ctx.rotate(obj.angle); 
+		ctx.rotate(angle); 
  
 		// then draw the image back and up
-		Game.ctx.drawImage(obj.img, -(obj.width/2), -(obj.height/2),obj.width,obj.height);
+		ctx.drawImage(img, -(width/2), -(height/2), width, height);
  
 		// and restore the co-ordinate system to its default
-		Game.ctx.restore();
+		ctx.restore();
 	}
 }

@@ -63,14 +63,6 @@ function update(context) {
 	}
 }
 
-function getMousePos(canvas, e) {
-	var rect = canvas.getBoundingClientRect();
-	return {
-        x: e.clientX - rect.left,
-		y: e.clientY - rect.top
-	};
-}
-
 Draw.canvas.addEventListener('mousemove', function(e) {
 	Draw.mousePosition = getMousePos(Draw.canvas, e);
 }, false);

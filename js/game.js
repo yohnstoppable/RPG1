@@ -6,7 +6,7 @@ Game = {
 	ctx : document.getElementById("myCanvas").getContext("2d"),
 	scale: 120,
 	player : new Player(1, 300,300,120,120,"Bill","person/defaultDude.png", "person/defaultBody.png", new baseClass),
-	player2 : new Player(2, 300, 300, 120, 120, "Durka", "person/defaultDude.png", "person/defaultBody.png", new baseClass),
+	//player2 : new Player(2, 300, 300, 120, 120, "Durka", "person/defaultDude.png", "person/defaultBody.png", new baseClass),
 	inventory: weaponList,
 	xDifference: 0,
 	yDifference: 0,
@@ -41,7 +41,7 @@ Game = {
 		Game.checkKeys();
 		//Game.level.update();
 		Game.player.update();
-		Game.player2.update();
+		//Game.player2.update();
 		
 		if (Game.projectiles.length > 0) {
 			for (var i=0; i < Game.projectiles.length; i++ ) {
@@ -53,7 +53,7 @@ Game = {
 	},
 	gameDraw: function() {
 		Game.drawLevel(Game.level);
-		Game.player2.draw(Game.ctx);
+		//Game.player2.draw(Game.ctx);
 		Game.player.draw(Game.ctx);
 		if (Game.projectiles && Game.projectiles.length > 0) {
 			for (var i=0; i < Game.projectiles.length; i++) {
@@ -184,4 +184,3 @@ window.addEventListener('keyup', function(event) {
 Game.canvas.addEventListener('mousemove', function(e) {
 	Game.mousePosition = getMousePos(Game.canvas, e);
 }, false);
-

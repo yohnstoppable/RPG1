@@ -1,4 +1,3 @@
-
 //********************     main function used for creating my movable mixins    **********************
 //Movement isn't just static, it uses velocity which is gained from acceleration, along with friction to slow it down.
 //This makes movement more fluid. 
@@ -363,7 +362,7 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 		}
 		
 		if (this.weapon.currentCooldown > 0) {
-			this.weapon.currentCooldown--;
+			this.weapon.currentCooldown = this.weapon.currentCooldown - 1;
 		};
 		/*context.drawImage(this.body,((this.bodyFrame-1) * (this.body.width/3)), 0, this.body.width/3, this.body.height, x + width * 2/9, y + (height * 2/3), width/3, height/3);*/
 	}
@@ -407,7 +406,13 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 		//check for space bar to shoot
 		if (Game.keys[32]) {
 			console.log('weapon', this.weapon);
-			this.weapon.throw(this,Game.mousePosition,true);
+              var position = {
+                  x: (Game.mousePosition.x + Game.xDifference),
+                  y: (Game.mousePosition.y + Game.yDifference)
+               };
+              
+              console.log('position', position);
+			this.weapon.throw(this,position,true);
 		}
 	}
 };
@@ -469,8 +474,8 @@ Player.prototype.draw = function(context) {
 var Projectile = function(obj,weapon) {
 	console.log('weapon', weapon);
 	this.weapon = weapon;
-	this.x = obj.x + obj.width/2;
-	this.y = obj.y + obj.height / 2;
+	this.x = obj.x + obj.width/4;
+	this.y = obj.y + obj.height/4;
 	this.width = weapon.width;
 	this.height = weapon.height;
 	this.img = weapon.img;
@@ -505,21 +510,19 @@ var Projectile = function(obj,weapon) {
 };
 
 Projectile.prototype.draw = function(context) {
-	var x = this.x;
-	var y = this.y;
-	
-	if (Game.xDifference != 0) {
-		x = Math.max(this.x - Game.xDifference, Game.scale*2);
-		x = Math.min (x, Game.canvas.width - Game.scale*3);
-	}
-	
-	if (Game.yDifference != 0) {
-		y = Math.max(this.y - Game.yDifference, Game.scale);
-		y = Math.min (y, Game.canvas.height - Game.scale*2);
-	}			
+	var x = this.x - Game.xDifference;
+	var y = this.y - Game.yDifference;		
+    
+	this.angle = (Math.atan2(this.velY, this.velX));
+    this.angle += (Math.PI)/2;
 
-	console.log('draw projectile', x + ', ' + y);
-	context.drawImage(this.weapon.img, x, y, this.width, this.height);
+		if (this.angle != 0) {
+			Common.drawRotated(this.weapon.img, x, y, this.width, this.height, context, this.angle);
+		} else {
+			context.drawImage(this.weapon.img, x, y, this.width, this.height);
+		}
+
+	//context.drawImage(this.weapon.img, x, y, this.width, this.height);
 }
 
 Projectile.prototype.kill = function(array, index) {
