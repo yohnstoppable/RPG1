@@ -7,6 +7,12 @@ var asMovable = function() {
 	this.gravity = 1;
 
 	this.move = function() {
+		if (this.playerNumber !== 1) {
+			console.log('this.x', this.x);
+			console.log('this.y', this.y);
+			console.log('this.velX', this.velX);
+			console.log('this.velY', this.velY);
+		}
 		this.x += this.velX;
 		this.y += this.velY;
 	}
@@ -95,6 +101,30 @@ var asMovable = function() {
 			
 		this.realX = x;
 		this.realY = y;				
+	}
+	
+	this.damage = function(array,index,dmg) {
+		this.health -= dmg;
+		if (this.health <= 0) {
+			this.kill(array,index);
+		}
+	}
+	
+	this.kill = function(array, index) {
+		if (typeof this.deathSound !== 'undefined') {
+			createjs.Sound.play(this.deathSound,createjs.Sound.INTERRUPT_ANY);
+		}
+		
+		if (this.drop) {
+			Stage.spawnSpecial(this.x, this.y);
+		}
+		array.splice(index,1);
+		delete(this);
+		Game.score += this.points;
+	}
+	
+	this.getHealth = function() {
+		return this.health;
 	}
 }; 
 
@@ -247,7 +277,38 @@ AnimatedObject.prototype.getCurrentImage = function() {
 	}
 }
 
-var Player = function(playerNumber, x, y, width, height, name, head, body, playerClass) {
+var Tower = function(img, x, y, width, height) {
+	this.img = new Image();
+	this.img.src = img;
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+	this.weapon = new weapon("Short Sword", "js/weapons/img/megaSword.png", 5, 0, 0, 0, 0, 35, true);
+}
+
+Tower.prototype.update = function() {
+	if (Game.enemies.length > 0) {
+		for (var i=0; i < Game.enemies.length; i++ ) {
+			if ((Common.distanceBetween(this, Game.enemies[i]) < 500)) {
+				this.weapon.throw(this,Game.enemies[i],true);
+			}
+		}
+		if (this.weapon.currentCooldown > 0) {
+			this.weapon.currentCooldown = this.weapon.currentCooldown - 1;
+		};
+	}
+}
+
+Tower.prototype.draw = function(context) {
+	var x = this.x - Game.xDifference;
+	var y = this.y - Game.yDifference;		
+    
+	context.drawImage(this.img, x, y, this.width, this.height);
+	//context.drawImage(this.weapon.img, x, y, this.width, this.height);
+}
+
+var Player = function(playerNumber, x, y, width, height, name, head, body, friend) {
     this.x = x;
     this.y = y;
 	this.realX = x;
@@ -262,7 +323,7 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 	this.friction = .8;
 	this.acceleration = .2;
 	this.jumping = false;	
-	this.playerClass = playerClass;
+	this.friend = friend;
 	this.strength = 10;
 	this.agility = 5;
 	this.intelligence = 11;
@@ -271,7 +332,12 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 	this.currentHitpoints = 10;
 	this.mana = 10;
 	this.currentMana = 10;
-	this.weapon = megaSword;
+	if (friend) {
+		this.weapon = new weapon("Mega Sword", "js/weapons/img/megaSword.png", 15, 5, 0, 0, 0, 10, true);
+	} else {
+		this.weapon = new weapon("Mega Sword", "js/weapons/img/shortSword.png", 15, 5, 0, 0, 0, 10, false);
+	}
+	
 	this.armor;
 	this.helmet;
 	this.accessory;
@@ -298,7 +364,7 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 			this.checkKeys();
 			this.move();
 			this.bounds();
-		} else if (this.playerNumber == 2) {
+		} else if (this.playerNumber === 2) {
 			if (Game.player.velX != 0) {
 				this.x = Game.player.realX - ((Math.abs(Game.player.velX)/Game.player.velX)*Game.scale/2);
 				if (Game.player.velY === 0) {
@@ -311,15 +377,23 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 					this.x = Game.player.realX
 				}
 			}
-		}			
+		} else {
+			this.accelerate(-this.acceleration,0);
+			this.move();
+			this.bounds();
+			if (Math.random() < .01) {
+				this.weapon.throw(this,Game.player,false);
+			}
+			//this.updateCooldowns();
+		}		
 			
-		if (Game.player.velX != 0 || Game.player.velY != 0) {
+		if (this.velX != 0 || this.velY != 0) {
 			if (!this.body.isAnimating()) {
 				this.body.startAnimation(2, "sprite", 2, 3, 15);
 			} else if (this.playerNumber === 1) {
 				this.body.updateAnimation(this.realX + (this.width * 2/9), this.realY + (this.height * 2/3));
 			} else {
-				this.body.updateAnimation(this.x + (this.width * 2/9), this.y + (this.height * 2/3));
+				this.body.updateAnimation(this.x-Game.xDifference + (this.width * 2/9), this.y-Game.yDifference + (this.height * 2/3));
 			}
 			
 			if (!this.head.isAnimating()) {
@@ -327,7 +401,7 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 			} else if (this.playerNumber === 1) {
 				this.head.updateAnimation(this.realX, this.realY + (this.height * 1/6));
 			} else {
-				this.head.updateAnimation(this.x, this.y + (this.height * 1/6));
+				this.head.updateAnimation(this.x - Game.xDifference, this.y - Game.yDifference + (this.height * 1/6));
 			}
 			//this.headAnimation = new animation(this.head)
 			this.counter += Math.max(Math.abs(Game.player.velX), Math.abs(Game.player.velY))/4;
@@ -366,6 +440,7 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 		};
 		/*context.drawImage(this.body,((this.bodyFrame-1) * (this.body.width/3)), 0, this.body.width/3, this.body.height, x + width * 2/9, y + (height * 2/3), width/3, height/3);*/
 	}
+	
 	
 	this.bounds = function () {
 		var check = this.checkBounds();
@@ -415,6 +490,11 @@ var Player = function(playerNumber, x, y, width, height, name, head, body, playe
 			this.weapon.throw(this,position,true);
 		}
 	}
+	
+	this.damage = function(array, index, damage) {
+		array.splice(index,1);
+		delete(this);
+	}
 };
 
 Player.prototype.getArmorClass = function() {
@@ -463,6 +543,9 @@ Player.prototype.draw = function(context) {
 	if (this.playerNumber === 1) {
 		x = this.realX;
 		y = this.realY;
+	} else {
+		x = this.x - Game.xDifference;
+		y = this.y - Game.yDifference;
 	}
 	var bodyInfo = this.body.getCurrentImage();
 	var headInfo = this.head.getCurrentImage();
@@ -472,7 +555,6 @@ Player.prototype.draw = function(context) {
 }
 
 var Projectile = function(obj,weapon) {
-	console.log('weapon', weapon);
 	this.weapon = weapon;
 	this.x = obj.x + obj.width/4;
 	this.y = obj.y + obj.height/4;
@@ -526,60 +608,100 @@ Projectile.prototype.draw = function(context) {
 }
 
 Projectile.prototype.kill = function(array, index) {
-		if (typeof this.deathSound !== 'undefined') {
-			createjs.Sound.play(this.deathSound,createjs.Sound.INTERRUPT_ANY);
-		}
+		//if (typeof this.deathSound !== 'undefined') {
+		//	createjs.Sound.play(this.deathSound,createjs.Sound.INTERRUPT_ANY);
+		//}
 		
-		if (this.drop) {
-			Stage.spawnSpecial(this.x, this.y);
-		}
+		//if (this.drop) {
+		//	Stage.spawnSpecial(this.x, this.y);
+		//}
 		array.splice(index,1);
 		delete(this);
-		Game.score += this.points;
+		//Game.score += this.points;
 	}
-
-var Enemy = function(width,height,src) {
+var Enemy = function(startingX,startingY,width,height,imgLeft,imgRight,health) {
 	this.width = width;
 	this.height = height;
+	this.imgLeft = imgLeft;
+	this.imgRight = new Image();
+	this.imgRight.src = imgRight.src;
 	this.img = new Image();
-	this.img.src = src;
-	this.x = Game.canvas.width - this.width;
-	this.y = Math.random() * (Game.canvas.height - this.height);
+	this.img.src = imgLeft;
+	this.x = startingX;
+	this.y = startingY;
 	this.velX = 0;
 	this.velY = 0;
-	this.maxXSpeed = 3;
+	this.maxXSpeed = 4;
 	this.maxYSpeed = 3;
-	this.acceleration = 1;
+	this.health = health;
+	this.accelerationX = 1;
+	this.accelerationY = 1;
+	this.shotChance = .003;
+	this.points = 1;
+	this.weapon = new weapon("Short Sword", "js/weapons/img/shortSword.png", 5, 0, 0, 0, 0, 35, false);
+	this.health = 2;
 	
-	this.update = function() {
+	this.update = function(gameArray,index) {
 		if (Math.random() < .5) {
-			this.accelerate(0,this.acceleration);
+			this.accelerate(0,this.accelerationY);
 		} else {
-			this.accelerate(0,-this.acceleration);
+			this.accelerate(0,-this.accelerationY);
 		}
-		this.accelerate(-this.acceleration,0);
+		this.accelerate(-this.accelerationX,0);
 		this.move();
 		this.bounds();
-		Game.draw(this);
+		//if (this.height > 100) {
+		//	document.getElementById("boss").innerHTML = this.health;
+		//}
+		
+		if (Math.random() < this.shotChance) {
+			this.weapon.throw(this,Game.player,false);
+		}
+		//this.updateCooldowns();
+		//this.draw();
 	}
 	
 	this.bounds = function() {
 		var check = this.checkBounds();
 		if (check[0] != -1) {
-			Game.enemies.push();
 			delete(this);
 		}
+		
 		if (check[1] != -1) {
 			this.y = check[1];
 		}
 	}
 	
-	this.getDestroyed = function(item) {
-		Game.enemies.splice(item,1);
+	this.equip = function(weapon) {
+		this.weapon = weapon;
+	}
+	
+	this.updateCooldowns = function() {
+		if (this.weapon.currentCooldown > 0) {
+			this.weapon.currentCooldown--;
+		}
+	}
+	
+	this.draw = function(context) {
+		var x = this.x - Game.xDifference;
+		var y = this.y - Game.yDifference;		
+		
+		//this.angle = (Math.atan2(this.velY, this.velX));
+		//this.angle += (Math.PI)/2;
+
+		//if (this.angle != 0) {
+		//	Common.drawRotated(this.img, x, y, this.width, this.height, context, this.angle);
+		//} else {
+			context.drawImage(this.img, x, y, this.width, this.height);
+		//}
+	}
+	
+	this.damage = function(array, index, damage) {
+		array.splice(index,1);
 		delete(this);
-		Game.score++;
 	}
 }
+
 //Inherit the methods from the asMovable function, creating our mixins
 asMovable.call(Player.prototype);
 asMovable.call(Projectile.prototype);

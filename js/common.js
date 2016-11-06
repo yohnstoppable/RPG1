@@ -8,28 +8,35 @@ Common = {
 		var offsetX2 = 0;
 		var offsetY = 0;
 		var offsetY2 = 0;
-		if (typeof(target.width) != "undefined") {
-			offsetX += target.width;
-		}
-    
-          if (typeof(weapon.width) != "undefined") {
-                offsetX -= weapon.width;
-          }
 		
-		if (typeof(obj.width) != "undefined") {
-			offsetX2 += obj.width;
-		}
-    
-        if (typeof(weapon.height) != "undefined") {
-                offsetY -= weapon.height;
-          }
-		
-		if (typeof(target.height) != "undefined") {
-			  offsetY += target.height;
+		if (target) {
+			if (target.width) {
+				offsetX += target.width;
+			}
+			
+			if (target.height) {
+				offsetY += target.height;
+			}
 		}
 		
-		if (typeof(obj.height) != "undefined") {
-			offsetY2 += obj.height;
+		if (weapon) {
+			if (weapon.width) {
+				offsetX -= weapon.width;
+			}
+			
+			if (weapon.height) {
+				offsetY -= weapon.height;
+			}
+		}
+
+		if (obj) {
+			if (obj.width){
+				offsetX2 += obj.width;
+			}
+			
+			if (obj.height) {
+				offsetY2 += obj.height;
+			}
 		}
 		
 		var rise = target.y - obj.y + (offsetY/2) - (offsetY2/4);
@@ -67,16 +74,12 @@ Common = {
 		try {
 			Game.ctx.drawImage(obj.img, obj.x, obj.y,obj.width,obj.height);
 		} catch (e) {
-			console.trace();
-			console.log(obj.img.src);
-			console.log(obj.x);
-			console.log(obj.y);
-			console.log(obj.width);
-			console.log(obj.height);
+
 		}
 	},
 	
 	drawRotated : function(img, x, y, width, height, ctx, angle) {
+
 		// save the context's co-ordinate system
 		ctx.save(); 
  
@@ -94,5 +97,9 @@ Common = {
  
 		// and restore the co-ordinate system to its default
 		ctx.restore();
+	},
+	
+	distanceBetween(obj1, obj2) {
+		return Math.hypot(obj2.x-obj1.x, obj2.y-obj1.y);
 	}
 }

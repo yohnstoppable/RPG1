@@ -5,7 +5,11 @@ Game = {
 	canvas : document.getElementById('myCanvas'),
 	ctx : document.getElementById("myCanvas").getContext("2d"),
 	scale: 120,
-	player : new Player(1, 300,300,120,120,"Bill","person/defaultDude.png", "person/defaultBody.png", new baseClass),
+	player : new Player(1, 300,300,120,120,"Bill","person/defaultDude.png", "person/defaultBody.png", true),
+	tower : new Tower('js/towers/placeholderTower.png', 100, 200, 120, 120),
+	tower2 : new Tower('js/towers/placeholderTower.png', 200, 600, 120, 120),
+	tower3 : new Tower('js/towers/placeholderTower.png', 150, 400, 120, 120),
+	tower4 : new Tower('js/towers/placeholderTower.png', 150, 150, 120, 120),
 	//player2 : new Player(2, 300, 300, 120, 120, "Durka", "person/defaultDude.png", "person/defaultBody.png", new baseClass),
 	inventory: weaponList,
 	xDifference: 0,
@@ -14,6 +18,11 @@ Game = {
 	badProjectiles : [],
 	maxProjectiles : 5,
 	projectileCooldown : 0,
+	enemyCollisions : [],
+	projectileCollisions : [],
+	images : [],
+	imageObj : [],
+	sounds : [],
 	enemies: [],
 	maxEnemies : 10,
 	enemyCooldown : 20,
@@ -41,6 +50,10 @@ Game = {
 		Game.checkKeys();
 		//Game.level.update();
 		Game.player.update();
+		Game.tower.update();
+		Game.tower2.update();
+		Game.tower3.update();
+		Game.tower4.update();
 		//Game.player2.update();
 		
 		if (Game.projectiles.length > 0) {
@@ -48,16 +61,85 @@ Game = {
 				Game.projectiles[i].update(Game.projectiles, i);
 			}
 		}
+		
+		if (Game.badProjectiles.length > 0) {
+			for (var i=0; i < Game.badProjectiles.length; i++ ) {
+				Game.badProjectiles[i].update(Game.badProjectiles, i);
+			}
+		}
+		
+		if (Game.enemies.length > 0) {
+			for (var i=0; i < Game.enemies.length; i++ ) {
+				Game.enemies[i].update(Game.enemies,i);
+			}
+		}
+		
+		//Player projectiles collision with enemies
+		if (Game.projectiles.length > 0 && Game.enemies.length > 0) {
+			for (var i=0; i < Game.projectiles.length; i++ ) {
+				for (var n=0; n < Game.enemies.length; n++) {
+					if (Common.checkCollision(Game.projectiles[i],Game.enemies[n])) {	
+						Game.enemies[n].damage(Game.enemies,n,1);
+						break;
+					}
+				}
+			}
+		}
+		
+		//Enemy projectiles collision with player1
+		if (Game.badProjectiles.length > 0) {
+			for (var i=0; i < Game.badProjectiles.length; i++ ) {
+				if (Common.checkCollision(Game.badProjectiles[i],Game.player)) {	
+					console.log('game over');
+				}
+			}
+		}
+			
+		if ((Math.ceil(Math.random()*10) > 9)) {
+			Game.spawnEnemy(Math.ceil(Math.random()*8));
+		}
+		
+		//if (Game.enemies.length < 1) {
+		//	Game.spawnEnemy(1);
+		//}
+		
 	
 		//requestAnimationFrame(Game.gameLoop);
+	},
+	
+	spawnEnemy : function (amount,x,y) {
+		amount = typeof amount !== 'undefined' ? amount : 1;
+		x = typeof x !== 'undefined' ? x : Game.canvas.width - 75;
+		y = typeof y !== 'undefined' ? y : Math.random() * (Game.canvas.height - 50);
+		console.log('x start', x);
+		console.log('y start', y);
+		for (i=0; i<amount; i++) {
+			Game.enemies[Game.enemies.length] = new Player(0,x,y,120,120,"Bill","person/defaultDude.png", "person/defaultBody.png", false);
+		}
 	},
 	gameDraw: function() {
 		Game.drawLevel(Game.level);
 		//Game.player2.draw(Game.ctx);
 		Game.player.draw(Game.ctx);
+		Game.tower.draw(Game.ctx);
+		Game.tower2.draw(Game.ctx);
+		Game.tower3.draw(Game.ctx);
+		Game.tower4.draw(Game.ctx);
 		if (Game.projectiles && Game.projectiles.length > 0) {
 			for (var i=0; i < Game.projectiles.length; i++) {
 				Game.projectiles[i].draw(Game.ctx);
+			}
+		}
+		
+		if (Game.badProjectiles && Game.badProjectiles.length > 0) {
+			for (var i=0; i < Game.badProjectiles.length; i++) {
+				Game.badProjectiles[i].draw(Game.ctx);
+			}
+		}
+		
+		if (Game.enemies.length > 0) {
+			for (var i=0; i < Game.enemies.length; i++ ) {
+				Game.enemies[i].draw(Game.ctx);
 			}
 		}
 	},
@@ -167,6 +249,29 @@ window.onload = function() {
 	Game.canvas.allowTaint = true;
 	//Game.gameLoop();
 	//Draw.gameLoop();
+	Game.images[0] = "images/dog.png";
+	Game.images[1] = "images/bone.png";
+	Game.images[2] = "images/wasp.png";
+	Game.images[3] = "images/background1.jpg";
+	Game.images[4] = "images/background2.jpg";
+	Game.images[5] = "images/cat.png";
+	Game.images[6] = "images/explosion.png";	
+	Game.images[7] = "images/machineGun.png";
+	Game.images[8] = "images/spread.png";		
+	Game.images[9] = "images/wasp2.png";	
+	Game.images[10] = "images/dog2.png";
+	Game.images[11] = "images/stinger2.png";
+	Game.images[12] = "images/shreddar.png";
+	Game.images[13] = "images/shreddar.png";
+	Game.images[14] = "images/bfg.png";
+	Game.images[15] = "images/special.png";
+
+	Game.sounds[0] = "audio/lazerShot.mp3";
+	Game.sounds[1] = "audio/lazerShotBad.mp3";
+	Game.sounds[2] = "audio/death.mp3";
+	Game.sounds[3] = "audio/hit.mp3";
+	Game.sounds[4] = "audio/hahaha.mp3";
+	Game.sounds[5] = "audio/zipzop.mp3";
 	MainLoop.setMaxAllowedFPS(60);
 	MainLoop.setUpdate(Game.gameLoop).setDraw(Game.gameDraw).setEnd(end).start();
 }
